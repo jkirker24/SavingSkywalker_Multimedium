@@ -13,51 +13,85 @@ Vm = 0.187249
 day_H=24.
 Tmin_H = -60.
 r_max = 0.310037
+r_max_luke = (1.9/(4*np.pi))**(1/2)
+
+volume_max = 0.187249
+volume_max_luke = ((3*r_max_luke)/(4*np.pi))**(1/2)
 
 radius = np.linspace(0,0.310037,M+1) # +1 to make M shells
 radius = radius[1:] # want radius of outer parts of shells
 #above line eliminates first place 0, to avoid a division by 0
-height = 2*radius
+height = r_max_luke + radius
 
+'''
 
+##Below code works
 surface_area = 2*np.pi*radius*(radius + height) # brute force would have been for-loop over M
 
 volume = np.pi*(radius**2)*height
 
-mass_luke = 70*(volume/Vm)
+mass_luke = 70*(volume/volume_max_luke)
 
 mass_tt = 290*(volume/Vm)
-#recreate as arrays similar to the above A(1,4) into area
 
-#recreate cooling Constants below as a formula using a linspace or array
 
-Ki  = (500*surface_area[0])/(mass[0]*4186)*60
-Kii = (500*surface_area[1])/(mass[1]*4186)*60
-Kiii = (500*surface_area[2])/(mass[2]*4186)*60
-Kiv = (500*surface_area[3])/(mass[3]*4186)*60  
-
-#not used below, intention is to eliminate the above discrete constants and use the below formula instead
 cooling_constant_luke = 60*(500*surface_area)/(mass_luke*4186)
 cooling_constant_tt = 60*(100*surface_area)/(mass_tt*205)
-
+##Above code works
 
 '''
-    7/18/2017:
-        Rewrote as single reference variables to create a list of cooling constants
-    7/25/2017:
-        Transformed constants Ki-Kiv into formula cooling_constant_*
-        Expanded number of shells up to 10
-        
+
+
+## Below is code in testing
+
+def cooling_constant_computation():
+    for R in radius:
+        height = 2*R
+        if R <= r_max_luke: ##Below are computations for luke
+            Surface_Area = 2*np.pi*R*(R+height)
+            Volume = (4/3)*np.pi*(R**3) ##Volume of a sphere for Luke
+            Mass = 70*(Volume/volume_max_luke)
+            cooling_constant = 60*(500*Surface_Area)/(Mass*4186)
+        elif R > r_max_luke and R < r_max:  ##Below are computations for tauntaun
+            Surface_Area = 2*np.pi*R*(R+height)
+            Volume = np.pi*(R**2)*height ## Volume of a cylinder for tauntaun
+            Mass = 290*(Volume/volume_max)
+            cooling_constant = 60*(100*Surface_Area)/(Mass*205)
+        return cooling_constant
+
+'''
+Current Error states: TypeError: 'function' is not subscriptable
+Online it seems this comes from an ambiguity objects
+
+Intention is to have cooling_constant_computation be called by dTdt, but I 
+do not know how the input variables work out.  I don't think cooling_constant_computation
+needs an input variable, since it's constantly radius and height which are already defined.
+
+Also I'm not certain how to address the [ss] loop index below for a function.
+Previously I believe it was just an array or list, and easily indexed.  However,
+now that it's a function I'm not sure if it becomes an array/list during the dTdt function.
+
+'''
+
     
-'''
+def dTdt(T_now):
+    nshells = len(T_now)
+    dTdt_now = np.empty(nshells)
+    dTdt_now[0] = -cooling_constant_computation[0]*(T_now[0] - T_now[1])
+    for ss in range(1,nshells-1): # up to but not including outer shell
+#        print('ss = {0}'.format(ss))
+        dTdt_now[ss] = -cooling_constant_computation[ss]*(T_now[ss] - T_now[ss+1])
+    ## Here would be another for-loop or if-statement to handle next object
+    dTdt_now[-1] = -cooling_constant_computation[-1]*(T_now[-1] - Tmin_H)# - T_now[4]) error in T_now[4]: 
+    return dTdt_now            
+    
+## Above is code in testing
 
-#create with same h,c values per medium
-  
-
-kconst = np.array([Ki,Kii,Kiii,Kiv])
 
 
-
+    
+        
+##Below code works
 
 #h*A/(m*c)*60
 #k_Luke=calc_cooling_const(500,1.9,70,4186)
@@ -65,6 +99,8 @@ kconst = np.array([Ki,Kii,Kiii,Kiv])
 
 time = np.linspace(tlim[0],tlim[1],N)
 dt = time[1] - time[0]
+
+'''##Below is old working code
 
 def dTdt(T_now):
     nshells = len(T_now)
@@ -76,16 +112,11 @@ def dTdt(T_now):
     ## Here would be another for-loop or if-statement to handle next object
     dTdt_now[-1] = -cooling_constant_luke[-1]*(T_now[-1] - Tmin_H)# - T_now[4]) error in T_now[4]: 
     return dTdt_now
-
-#review above loop, 
-
 '''
-Todo:
-    Create sensible file for github
-    create repository on github
-    decide on treating arrays with per medium constants, i.e. keep h and c the same for each array
-    practice sensible variable names, comments, and units and regular sanity checks    
-'''
+
+
+
+##Below Code to remain unaltered until functions for cooling_constant_computation and dTdt are finished 7/28/17
 
 
 #T_Hoth = 0.5*Tmin_H*(1+np.sin(2*np.pi*time/day_H))
@@ -128,3 +159,5 @@ for ii in range(M):
 #plt.semilogy()
 plt.legend()
 plt.show()
+#print(r_max_luke)
+
