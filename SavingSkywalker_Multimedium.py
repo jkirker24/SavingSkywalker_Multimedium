@@ -44,20 +44,27 @@ cooling_constant_tt = 60*(100*surface_area)/(mass_tt*205)
 
 ## Below is code in testing
 
-def cooling_constant_computation():
-    for R in radius:
+def cooling_constant_computation(radius): ## KLC: you need to pass in a radius variable
+    ## KLC: But you also nee an appropriately sized container
+    nshells = len(radius)
+    cooling_constant = np.empty(nshells)
+    for rr in range(nshells):
+        R = radius[rr] # KLC: doing this way more robust to diff in
+                       # Python v2 vs v3 *and* enables rr to index
+                       # cooling_constant (for R in radius would have
+                       # R not applicable)
         height = 2*R
         if R <= r_max_luke: ##Below are computations for luke
             Surface_Area = 2*np.pi*R*(R+height)
             Volume = (4/3)*np.pi*(R**3) ##Volume of a sphere for Luke
             Mass = 70*(Volume/volume_max_luke)
-            cooling_constant = 60*(500*Surface_Area)/(Mass*4186)
+            cooling_constant[rr] = 60*(500*Surface_Area)/(Mass*4186)
         elif R > r_max_luke and R < r_max:  ##Below are computations for tauntaun
             Surface_Area = 2*np.pi*R*(R+height)
             Volume = np.pi*(R**2)*height ## Volume of a cylinder for tauntaun
             Mass = 290*(Volume/volume_max)
-            cooling_constant = 60*(100*Surface_Area)/(Mass*205)
-        return cooling_constant
+            cooling_constant[rr] = 60*(100*Surface_Area)/(Mass*205)
+    return cooling_constant # KLC: return the array (not within for-loop)
 
 '''
 Current Error states: TypeError: 'function' is not subscriptable
@@ -77,12 +84,23 @@ now that it's a function I'm not sure if it becomes an array/list during the dTd
 def dTdt(T_now):
     nshells = len(T_now)
     dTdt_now = np.empty(nshells)
-    dTdt_now[0] = -cooling_constant_computation[0]*(T_now[0] - T_now[1])
+#    dTdt_now[0] = -cooling_constant_computation[0]*(T_now[0] - T_now[1])
+
+    ## KLC: functions are accessed with parentheses, not square
+    ## brackets but it seems you actually want an array of cooling
+    ## constants so since the radius variable is defined and
+    ## instantiated outside any function, it is available to all
+    ## functions. So we'll use the function
+    ## cooling_constant_computation() on the "global-ish" variable
+    ## radius to define an array of cooling constants. Then use it in
+    ## the calculations.
+    cooling_const = cooling_constant_computation(radius) ## KLC: 
+    dTdt_now[0] = -cooling_const[0]*(T_now[0] - T_now[1])
     for ss in range(1,nshells-1): # up to but not including outer shell
 #        print('ss = {0}'.format(ss))
-        dTdt_now[ss] = -cooling_constant_computation[ss]*(T_now[ss] - T_now[ss+1])
+        dTdt_now[ss] = -cooling_const[ss]*(T_now[ss] - T_now[ss+1])
     ## Here would be another for-loop or if-statement to handle next object
-    dTdt_now[-1] = -cooling_constant_computation[-1]*(T_now[-1] - Tmin_H)# - T_now[4]) error in T_now[4]: 
+    dTdt_now[-1] = -cooling_const[-1]*(T_now[-1] - Tmin_H)# - T_now[4]) error in T_now[4]: 
     return dTdt_now            
     
 ## Above is code in testing
