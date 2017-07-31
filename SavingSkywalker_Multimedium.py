@@ -81,7 +81,7 @@ now that it's a function I'm not sure if it becomes an array/list during the dTd
 '''
 
     
-def dTdt(T_now):
+def dTdt(T_now,radius):
     nshells = len(T_now)
     dTdt_now = np.empty(nshells)
 #    dTdt_now[0] = -cooling_constant_computation[0]*(T_now[0] - T_now[1])
@@ -94,7 +94,7 @@ def dTdt(T_now):
     ## cooling_constant_computation() on the "global-ish" variable
     ## radius to define an array of cooling constants. Then use it in
     ## the calculations.
-    cooling_const = cooling_constant_computation(radius) ## KLC: 
+    cooling_const = cooling_constant_computation(radius) ## KLC: but really, pass in or make global variable e.e., k_r
     dTdt_now[0] = -cooling_const[0]*(T_now[0] - T_now[1])
     for ss in range(1,nshells-1): # up to but not including outer shell
 #        print('ss = {0}'.format(ss))
@@ -152,15 +152,16 @@ T_all[0,:] = T_init
 #[0],radius[1],radius[2],radius[3]],float)
  
 def answer():
-    
+    ## KLC: make all the floating "preamble" definitions part of this
+    ## function
     for ii in range(1,N):
-        k1 = dt * dTdt(T_all[ii-1,:])
+        k1 = dt * dTdt(T_all[ii-1,:],radius)
         
-        k2 = dt * dTdt(T_all[ii-1,:]+0.5*k1)
+        k2 = dt * dTdt(T_all[ii-1,:]+0.5*k1,radius)
         
-        k3 = dt * dTdt(T_all[ii-1,:]+0.5*k2)
+        k3 = dt * dTdt(T_all[ii-1,:]+0.5*k2,radius)
         
-        k4 = dt * dTdt(T_all[ii-1,:]+k3)
+        k4 = dt * dTdt(T_all[ii-1,:]+k3,radius)
         
         T_all[ii,:] = T_all[ii-1,:] + (k1+ 2*(k2+k3) + k4)/6.
     print(T_all)
@@ -179,3 +180,12 @@ plt.legend()
 plt.show()
 #print(r_max_luke)
 
+
+## KLC: Josh's To Do
+## - fix dTdt() calling cooling_constant() function to accept k_r array
+## - fix answer() to have all the "preamble" stuff and allow user to
+##   change parameters without re-compiling
+## - test range of "sensible" parameters (e.g., nshell=1)
+## - add tauntaun shell (represented by diff. cooling constant array)
+## - add constant or variable Hoth temperature
+## - enable user to change geometry (i.e., enable "spherical" mode)
