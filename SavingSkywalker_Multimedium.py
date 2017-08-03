@@ -45,12 +45,14 @@ def answer(RM_tt = 0.310037, RM_LS = (1.9/(4*np.pi))**(1/2), \
            VM_tt = 0.187249, Ti_LS = 35., Ti_tt = 37., \
            day_H = 24, tlim = (0.,24.), Tmin_H = -60, \
            N=10000, M=10):
+    
     '''
     values for radii max to set global variables
     volume max of tauntaun set to global variables
     volume max of luke defined in cooling_constant_computation
         because it uses r_max_luke    
     '''
+
     global r_max_tt, r_max_luke, volume_max_tt, volume_max_luke, radius
     
     r_max_tt = RM_tt
@@ -58,7 +60,7 @@ def answer(RM_tt = 0.310037, RM_LS = (1.9/(4*np.pi))**(1/2), \
     volume_max_tt = VM_tt
 
     radius = np.linspace(0,0.310037,M+1) # +1 to make M shells
-    radius = radius[1:]
+    radius = radius[1:] # 
     
     time = np.linspace(tlim[0],tlim[1],N)
     dt = time[1] - time[0]
@@ -91,19 +93,13 @@ def answer(RM_tt = 0.310037, RM_LS = (1.9/(4*np.pi))**(1/2), \
 #plt.semilogy()
     plt.legend()
     plt.show()
-    print(T_all)
+    print('shape:',T_all.shape)
     return T_all
 
 
 T_all = answer()
 
-'''
-for ii in range(M):
-    plt.plot(time,T_all[:,ii],label='M = {0}'.format(ii))
-#plt.semilogy()
-plt.legend()
-plt.show()
-'''
+
 
 
 
