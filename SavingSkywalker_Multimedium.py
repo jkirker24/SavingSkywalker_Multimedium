@@ -27,7 +27,7 @@ def cooling_constant_computation(radius):## KLC: you need to pass in a radius va
 
 
 def dTdt(T_now,T_H_now,Tmin_H = -60):
-    global k_LS, k_tt
+    global k_LS, k_tt, radius
     
     nshells = len(T_now)
     dTdt_now = np.empty(nshells)
@@ -51,13 +51,12 @@ def answer(RM_tt = 0.310037, RM_LS = (1.9/(4*np.pi))**(1/2), \
     volume max of luke defined in cooling_constant_computation
         because it uses r_max_luke    
     '''
-    global r_max_tt, r_max_luke, volume_max_tt, volume_max_luke
+    global r_max_tt, r_max_luke, volume_max_tt, volume_max_luke, radius
     
     r_max_tt = RM_tt
     r_max_luke = RM_LS
     volume_max_tt = VM_tt
 
-    
     radius = np.linspace(0,0.310037,M+1) # +1 to make M shells
     radius = radius[1:]
     
